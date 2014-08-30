@@ -31,6 +31,8 @@ public class ProcessManager {
 				}
 			}catch(IOException e){
 				System.out.println("IOException occurred\n");
+			}catch(IllegalArgumentException e) {
+				System.out.println("Invalid Command\n");
 			}
 		}
 	}
