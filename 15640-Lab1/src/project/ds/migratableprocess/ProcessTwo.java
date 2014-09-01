@@ -4,6 +4,7 @@ public class ProcessTwo implements MigratableProcess {
 
 	@Override
 	public void run() {
+		System.out.println("Running ProcessTwo!");
 		// TODO Auto-generated method stub
 
 	}

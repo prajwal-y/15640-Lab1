@@ -13,7 +13,8 @@ public class MigrateMaster extends Thread {
 	public void run() {
 		try {
 			server = new ServerSocket(ProcessConstants.serverport);
-			client = server.accept();
+			server.close();
+			//client = server.accept();
 		} catch (IOException e) {
 			System.out.println("IOException occurred in Server with error "+e.getMessage());
 		}

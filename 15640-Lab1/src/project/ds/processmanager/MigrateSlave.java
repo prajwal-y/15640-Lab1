@@ -23,6 +23,7 @@ public class MigrateSlave extends Thread {
 			client = new Socket("Master-Machine", ProcessConstants.serverport);
 			in = new ObjectInputStream(client.getInputStream());
 			out = new ObjectOutputStream(client.getOutputStream());
+			client.close();
 		} catch (UnknownHostException e) {
 			System.out.println("UnknownHostException occurred in Client with error "+e.getMessage());
 		} catch (IOException e) {
