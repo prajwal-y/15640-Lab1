@@ -6,7 +6,10 @@ package project.ds.processmanager;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.HashMap;
 
 import project.ds.migratableprocess.MigratableProcess;
 
@@ -16,7 +19,8 @@ import project.ds.migratableprocess.MigratableProcess;
  */
 public class ProcessManager {
 
-	private static ArrayList<ProcessObject> processList = null;
+	private static HashMap<String, ProcessObject> processList = null;
+	private static MigrateMaster master;
 
 	/**
 	 * Provides interactive console to the user. Accepts commands and processes
@@ -31,6 +35,7 @@ public class ProcessManager {
 				String input = in.readLine();
 				String[] args = input.split(" ");
 				CommandTypes cmd = CommandTypes.valueOf(args[0]);
+				System.out.println(cmd);
 				switch (cmd) {
 				case QUIT:
 					flag = false;
@@ -40,19 +45,26 @@ public class ProcessManager {
 					break;
 				case PROCESS:
 					String className = args[1];
-					startProcess(className);
+					System.out.println(className);
+					String[] arguments = null;
+					if(args.length >= 3)
+						arguments = Arrays.copyOfRange(args, 2, args.length);
+					System.out.println(Arrays.toString(arguments));
+					startProcess(className, arguments);
 					break;
 				case SUSPEND:
 					break; // TODO
 				case MIGRATE:
-					break; // TODO
+					String processName = args[1];
+					migrateProcess(processName);
+					break;
 				default:
 					System.out.print("Invalid command");
 				}
 			} catch (IOException e) {
-				System.out.print("IOException occurred");
+				System.out.print("IOException occurred: "+e.getMessage());
 			} catch (IllegalArgumentException e) {
-				System.out.print("Invalid Command");
+				System.out.print("IllegalArgumentException: "+e.getMessage());
 			}
 		}
 	}
@@ -62,15 +74,22 @@ public class ProcessManager {
 	 * 
 	 * @param className
 	 */
-	private static void startProcess(String className) {
+	private static void startProcess(String className, String[] args) {
 		Class<?> c;
+		Constructor constructor;
 		try {
 			c = Class.forName(className);
-			Object inst = c.newInstance();
-			// Adding the process object to the process list
-			processList.add(new ProcessObject(inst, className, "running"));
+			constructor = c.getConstructor(String[].class);
+			Object inst = constructor.newInstance((Object)args);
+			//Adding the process object to the process list
+			//TODO: Fix the thread ID
+			processList.put(className, new ProcessObject((MigratableProcess)inst, className, "running"));
 			new Thread((Runnable) inst).start(); // Start the process in a new
 													// thread
+		} catch(InvocationTargetException e) {
+			System.out.println("InvocationTargetException: " + e.getMessage());
+		} catch(NoSuchMethodException e) {
+			System.out.println("NoSuchMethodException: " + e.getMessage());
 		} catch (ClassNotFoundException e) {
 			System.out.println("ClassNotFoundException: " + e.getMessage());
 		} catch (InstantiationException e) {
@@ -84,11 +103,11 @@ public class ProcessManager {
 		if (processList.isEmpty())
 			System.out.print("No processes running currently");
 		else {
-			for (ProcessObject processObject : processList)
-				System.out.println("Process: " + processObject.processId);
+			for (String processId : processList.keySet())
+				System.out.println("Process: " + processId);
 		}
 	}
-
+	
 	/**
 	 * Suspends the specified process
 	 * 
@@ -103,7 +122,10 @@ public class ProcessManager {
 	 * 
 	 * @param process
 	 */
-	private void migrate(MigratableProcess process) {
+	private static void migrateProcess(String processId) {
+		MigratableProcess migratableObj = processList.get(processId).migratableObj;
+		migratableObj.suspend();
+		master.migrateProcess(migratableObj);
 		return;
 	}
 
@@ -114,7 +136,8 @@ public class ProcessManager {
 
 		// No arguments, ProcessManager will be functioning as master
 		if (args != null && args.length == 0) {
-			(new MigrateMaster()).start();
+			master = new MigrateMaster();
+			master.start();
 		}
 		// -c argument passed. ProcessManager will function as slave
 		else if (args[0].equals("-c")) {
@@ -126,7 +149,7 @@ public class ProcessManager {
 			System.out.println("Invalid arguments passed. Please try again");
 			System.exit(0);
 		}
-		processList = new ArrayList<ProcessObject>();
+		processList = new HashMap<String, ProcessObject>();
 		processInput();
 	}
 

@@ -1,12 +1,14 @@
 package project.ds.processmanager;
 
+import project.ds.migratableprocess.MigratableProcess;
+
 public class ProcessObject {
-	Object object;
+	MigratableProcess migratableObj;
 	String processId;
 	String state;
 	
-	public ProcessObject(Object obj, String pid, String st) {
-		object = obj;
+	public ProcessObject(MigratableProcess obj, String pid, String st) {
+		migratableObj = obj;
 		processId = pid;
 		state = st;
 	}

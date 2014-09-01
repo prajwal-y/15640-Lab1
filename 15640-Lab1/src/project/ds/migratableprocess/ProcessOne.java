@@ -12,7 +12,7 @@ public class ProcessOne implements MigratableProcess {
 	private TransactionalFileOuptutStream outFile;
 	private volatile boolean suspending = false;
 	
-	public ProcessOne(String args[]){
+	public ProcessOne(String[] args){
 		inFile = new TransactionalFileInputStream(args[0]);
 		outFile = new TransactionalFileOuptutStream(args[1]);
 	}
