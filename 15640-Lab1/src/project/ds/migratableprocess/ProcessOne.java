@@ -9,12 +9,12 @@ import project.ds.transactionalio.TransactionalFileOuptutStream;
 public class ProcessOne implements MigratableProcess {
 	
 	private TransactionalFileInputStream  inFile;
-	//private TransactionalFileOutputStream outFile;
+	private TransactionalFileOuptutStream outFile;
 	private volatile boolean suspending = false;
 	
 	public ProcessOne(String args[]){
 		inFile = new TransactionalFileInputStream(args[0]);
-		//outFile = new TransactionalFileOuptutStream(args[1]);
+		outFile = new TransactionalFileOuptutStream(args[1]);
 	}
 	
 	@Override
@@ -25,7 +25,7 @@ public class ProcessOne implements MigratableProcess {
 				
 				if(line == null) break;
 				
-				//outFile.printLn(line);
+				outFile.printLn(line);
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
