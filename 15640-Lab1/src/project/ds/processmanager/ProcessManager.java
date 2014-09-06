@@ -14,10 +14,10 @@ import java.util.HashMap;
 import project.ds.migratableprocess.MigratableProcess;
 
 /**
- * @author Prajwal Yadapadithaya (Andrew ID: pyadapad) 
- * Rohit Upadhyaya (AndrewID: rjupadhy)
+ * @author Prajwal Yadapadithaya (Andrew ID: pyadapad) Rohit Upadhyaya
+ *         (AndrewID: rjupadhy)
  */
-public class ProcessManager {
+public class ProcessManager implements ProcessCallback{
 
 	private static HashMap<String, ProcessObject> processList = null;
 	private static MigrateMaster master;
@@ -26,7 +26,7 @@ public class ProcessManager {
 	 * Provides interactive console to the user. Accepts commands and processes
 	 * them
 	 */
-	private static void processInput() {
+	private void processInput() {
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		boolean flag = true;
 		while (flag) {
@@ -47,7 +47,7 @@ public class ProcessManager {
 					String className = args[1];
 					System.out.println(className);
 					String[] arguments = null;
-					if(args.length >= 3)
+					if (args.length >= 3)
 						arguments = Arrays.copyOfRange(args, 2, args.length);
 					System.out.println(Arrays.toString(arguments));
 					startProcess(className, arguments);
@@ -62,9 +62,9 @@ public class ProcessManager {
 					System.out.print("Invalid command");
 				}
 			} catch (IOException e) {
-				System.out.print("IOException occurred: "+e.getMessage());
+				System.out.print("IOException occurred: " + e.getMessage());
 			} catch (IllegalArgumentException e) {
-				System.out.print("IllegalArgumentException: "+e.getMessage());
+				System.out.print("IllegalArgumentException: " + e.getMessage());
 			}
 		}
 	}
@@ -74,21 +74,24 @@ public class ProcessManager {
 	 * 
 	 * @param className
 	 */
-	private static void startProcess(String className, String[] args) {
+	private void startProcess(String className, String[] args) {
 		Class<?> c;
 		Constructor constructor;
 		try {
 			c = Class.forName(className);
 			constructor = c.getConstructor(String[].class);
-			Object inst = constructor.newInstance((Object)args);
-			//Adding the process object to the process list
-			//TODO: Fix the thread ID
-			processList.put(className, new ProcessObject((MigratableProcess)inst, className, "running"));
-			new Thread((Runnable) inst).start(); // Start the process in a new
-													// thread
-		} catch(InvocationTargetException e) {
+			Object inst = constructor.newInstance((Object) args);
+			// Adding the process object to the process list
+			// TODO: Fix the thread ID (currently using className)
+			processList.put(className, new ProcessObject(
+					(MigratableProcess) inst, className, "running"));
+			//Start the process in a new thread
+			RunProcess prc = new RunProcess((MigratableProcess) inst, this, className);
+			new Thread((Runnable)prc).start();
+			//new Thread((Runnable) inst).start();
+		} catch (InvocationTargetException e) {
 			System.out.println("InvocationTargetException: " + e.getMessage());
-		} catch(NoSuchMethodException e) {
+		} catch (NoSuchMethodException e) {
 			System.out.println("NoSuchMethodException: " + e.getMessage());
 		} catch (ClassNotFoundException e) {
 			System.out.println("ClassNotFoundException: " + e.getMessage());
@@ -99,7 +102,7 @@ public class ProcessManager {
 		}
 	}
 
-	private static void listProcesses() {
+	private void listProcesses() {
 		if (processList.isEmpty())
 			System.out.print("No processes running currently");
 		else {
@@ -107,13 +110,13 @@ public class ProcessManager {
 				System.out.println("Process: " + processId);
 		}
 	}
-	
+
 	/**
 	 * Suspends the specified process
 	 * 
 	 * @param process
 	 */
-	private static void suspend(MigratableProcess process) {
+	private void suspend(MigratableProcess process) {
 		return;
 	}
 
@@ -122,7 +125,7 @@ public class ProcessManager {
 	 * 
 	 * @param process
 	 */
-	private static void migrateProcess(String processId) {
+	private void migrateProcess(String processId) {
 		MigratableProcess migratableObj = processList.get(processId).migratableObj;
 		migratableObj.suspend();
 		master.migrateProcess(migratableObj);
@@ -150,7 +153,13 @@ public class ProcessManager {
 			System.exit(0);
 		}
 		processList = new HashMap<String, ProcessObject>();
-		processInput();
+		ProcessManager pm = new ProcessManager();
+		pm.processInput();
+	}
+
+	@Override
+	public void processCallback(String processId) {
+		processList.remove(processId);
 	}
 
 }
