@@ -1,14 +1,13 @@
 package project.ds.transactionalio;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.Serializable;
 
-public class TransactionalFileInputStream{
+public class TransactionalFileInputStream extends InputStream implements Serializable{
 	
 	//Variable to maintain state of file read
 	int numLines;
@@ -23,13 +22,8 @@ public class TransactionalFileInputStream{
 	}
 	
 	public String readLine() throws IOException{
-		Path file = Paths.get(filePath);
-		try {
-			in = Files.newInputStream(file);
-		} catch (IOException e) {
-			System.out.println("IOException in TransactionalFileInputStream: "+ e.getMessage());
-		}
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+		File file = new File(filePath);
+        BufferedReader reader = new BufferedReader(new FileReader(file));
         String line;
         for(int i = 0; i < numLines; i++){
         	reader.readLine();
@@ -42,17 +36,23 @@ public class TransactionalFileInputStream{
 	
 	public byte[] readBytes(int bytes) throws IOException{
 		byte[] result = new byte[bytes];
-		Path file = Paths.get(filePath);
+		/*Path file = Paths.get(filePath);
 		try {
 			in = Files.newInputStream(file);
 		} catch (IOException e) {
 			System.out.println("IOException in TransactionalFileInputStream: "+ e.getMessage());
-		}
+		}*/
 		
 		//Seek to numBytes beyond beginning
 		in.read(result, 0, bytes);
 		return null;
 		
+	}
+
+	@Override
+	public int read() throws IOException {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 	
 }

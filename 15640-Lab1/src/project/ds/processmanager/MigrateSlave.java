@@ -20,10 +20,13 @@ public class MigrateSlave extends Thread {
 	@Override
 	public void run() {
 		try {
-			client = new Socket("Master-Machine", ProcessConstants.serverport);
+			client = new Socket(host, ProcessConstants.serverport);
+			System.out.println("WAitig");
 			in = new ObjectInputStream(client.getInputStream());
+			System.out.println("Waiting for process...");
 			MigratableProcess migratableObj = (MigratableProcess)in.readObject();
-		    ((Thread)migratableObj).start();
+			System.out.println("Received process object :" + migratableObj.toString());
+		    new Thread((Runnable)migratableObj).start();
 			in.close();
 			client.close();
 		} catch (UnknownHostException e) {

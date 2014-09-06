@@ -15,7 +15,7 @@ public class MigrateMaster extends Thread {
 
 	@Override
 	public void run() {
-		while (true) {
+		//while (true) {
 			try {
 				server = new ServerSocket(ProcessConstants.serverport);
 				//server.close();
@@ -23,7 +23,7 @@ public class MigrateMaster extends Thread {
 			} catch (IOException e) {
 				System.out.println("IOException occurred in Server with error "
 						+ e.getMessage());
-			}
+			//}
 		}
 	}
 

@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.Serializable;
 
-public class TransactionalFileOuptutStream {
+public class TransactionalFileOuptutStream extends OutputStream implements Serializable{
 	
-	OutputStream out;
+	transient OutputStream out;
 	String filePath;
 	
 	public TransactionalFileOuptutStream(String filePath){
@@ -18,17 +20,22 @@ public class TransactionalFileOuptutStream {
 	public void printLn(String line){
         try {
             //below true flag tells OutputStream to append
+        	//File file = new File(filePath);
             out = new FileOutputStream(new File(filePath), true);
             out.write(line.getBytes(), 0, line.length());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }finally{
-            try {
-                out.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            out.write(System.getProperty("line.separator").getBytes(), 0 , 
+            		System.getProperty("line.separator").length());
+        	//System.out.println(line);
+            out.close();
+        }catch(IOException e) {
+        	System.out.println("IOException occurred: "+e.getMessage());
         }
+   }
+
+	@Override
+	public void write(int arg0) throws IOException {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
