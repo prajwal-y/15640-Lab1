@@ -17,7 +17,7 @@ import project.ds.migratableprocess.MigratableProcess;
  * @author Prajwal Yadapadithaya (Andrew ID: pyadapad) Rohit Upadhyaya
  *         (AndrewID: rjupadhy)
  */
-public class ProcessManager implements ProcessCallback{
+public class ProcessManager implements ProcessCallback {
 
 	private static HashMap<String, ProcessObject> processList = null;
 	private static MigrateMaster master;
@@ -82,13 +82,14 @@ public class ProcessManager implements ProcessCallback{
 			constructor = c.getConstructor(String[].class);
 			Object inst = constructor.newInstance((Object) args);
 			// Adding the process object to the process list
-			// TODO: Fix the thread ID (currently using className)
-			processList.put(className, new ProcessObject(
-					(MigratableProcess) inst, className, "running"));
-			//Start the process in a new thread
-			RunProcess prc = new RunProcess((MigratableProcess) inst, this, className);
-			new Thread((Runnable)prc).start();
-			//new Thread((Runnable) inst).start();
+			String processId = getProcessId();
+			processList.put(processId, new ProcessObject(
+					(MigratableProcess) inst, processId, "running"));
+			// Start the process in a new thread
+			RunProcess prc = new RunProcess((MigratableProcess) inst, this,
+					processId);
+			new Thread((Runnable) prc).start();
+			// new Thread((Runnable) inst).start();
 		} catch (InvocationTargetException e) {
 			System.out.println("InvocationTargetException: " + e.getMessage());
 		} catch (NoSuchMethodException e) {
@@ -107,7 +108,10 @@ public class ProcessManager implements ProcessCallback{
 			System.out.print("No processes running currently");
 		else {
 			for (String processId : processList.keySet())
-				System.out.println("Process: " + processId);
+				System.out.println(processId
+						+ ": "
+						+ processList.get(processId).migratableObj.getClass()
+								.getName());
 		}
 	}
 
@@ -133,19 +137,51 @@ public class ProcessManager implements ProcessCallback{
 	}
 
 	/**
+	 * This method is called when the slave receives the process after migration
+	 * from master.
+	 * 
+	 * @param inst
+	 */
+	public void receiveProcess(MigratableProcess inst) {
+		String processId = getProcessId();
+		processList.put(processId,
+				new ProcessObject(inst, processId, "running"));
+		RunProcess prc = new RunProcess(inst, this, processId);
+		new Thread((Runnable) prc).start();
+	}
+
+	/**
+	 * Gets a unique identifier to each process. Identifier is of the format
+	 * "Process:<ID>"
+	 * 
+	 * @return
+	 */
+	private String getProcessId() {
+		int id = processList.size() + 1;
+		return "Process:" + id;
+	}
+
+	@Override
+	public void processCallback(String processId) {
+		processList.remove(processId);
+	}
+
+	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 
+		ProcessManager pm = new ProcessManager();
+
 		// No arguments, ProcessManager will be functioning as master
 		if (args != null && args.length == 0) {
-			master = new MigrateMaster();
+			master = new MigrateMaster(pm);
 			master.start();
 		}
 		// -c argument passed. ProcessManager will function as slave
 		else if (args[0].equals("-c")) {
 			String host = args[1];
-			(new MigrateSlave(host)).start();
+			(new MigrateSlave(host, pm)).start();
 		}
 		// Exit if any invalid arguments are passed.
 		else {
@@ -153,13 +189,7 @@ public class ProcessManager implements ProcessCallback{
 			System.exit(0);
 		}
 		processList = new HashMap<String, ProcessObject>();
-		ProcessManager pm = new ProcessManager();
 		pm.processInput();
-	}
-
-	@Override
-	public void processCallback(String processId) {
-		processList.remove(processId);
 	}
 
 }

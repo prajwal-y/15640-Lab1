@@ -12,6 +12,11 @@ public class MigrateMaster extends Thread {
 
 	ServerSocket server = null;
 	Socket client = null;
+	ProcessManager pm = null;
+	
+	public MigrateMaster(ProcessManager p) {
+		pm = p;
+	}
 
 	@Override
 	public void run() {

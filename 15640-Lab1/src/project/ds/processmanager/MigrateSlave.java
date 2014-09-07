@@ -12,9 +12,11 @@ public class MigrateSlave extends Thread {
 	String host = null;
 	Socket client = null;
 	ObjectInputStream in;
+	ProcessManager pm = null;
 	
-	public MigrateSlave(String hostname) {
+	public MigrateSlave(String hostname, ProcessManager p) {
 		host = hostname;
+		pm = p;
 	}
 	
 	@Override
@@ -26,7 +28,7 @@ public class MigrateSlave extends Thread {
 			System.out.println("Waiting for process...");
 			MigratableProcess migratableObj = (MigratableProcess)in.readObject();
 			System.out.println("Received process object :" + migratableObj.toString());
-		    new Thread((Runnable)migratableObj).start();
+			pm.receiveProcess(migratableObj);
 			in.close();
 			client.close();
 		} catch (UnknownHostException e) {
