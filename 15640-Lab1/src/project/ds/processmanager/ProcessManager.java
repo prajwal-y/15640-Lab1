@@ -35,38 +35,55 @@ public class ProcessManager implements ProcessCallback {
 				String input = in.readLine();
 				String[] args = input.split(" ");
 				CommandTypes cmd = CommandTypes.valueOf(args[0]);
-				System.out.println(cmd);
 				switch (cmd) {
-				case QUIT:
+				case help:
+					System.out.println("     PROCESS_MIGRATOR v1.0       ");
+					System.out.println("---------------------------------");
+					System.out.println("These are the acceptable commands");
+					System.out.println("=> process <processName> <arguments> : Starts a new process of the specified name, with the arguments specified. Process should be of the type MigratableProcess. Also please specify fully qualified name of the process class.");
+					System.out.println("=> ps : Lists the currently running processes. the format is <processId>:<processName>.");
+					System.out.println("=> migrate <processId> : Migrate the process to the slave node (Applicable only on master).");
+					System.out.println("=> suspend <processId> : Suspend the process.");
+					System.out.println("=> quit : Exit PROCESS_MIGRATOR v1.0");
+					break;
+				case quit:
 					flag = false;
 					break;
-				case PS:
+				case ps:
 					listProcesses();
 					break;
-				case PROCESS:
+				case process:
+					if(args.length <= 1) {
+						System.out.print("Process name not specified. Please enter a valid process name.");
+						break;
+					}
 					String className = args[1];
-					System.out.println(className);
+					if(!className.contains("migratableprocess")) {
+						System.out.print("This process is not a migratable process. Please specify processes that implement the class MigratableProcess.");
+						break;
+					}
 					String[] arguments = null;
 					if (args.length >= 3)
 						arguments = Arrays.copyOfRange(args, 2, args.length);
-					System.out.println(Arrays.toString(arguments));
 					startProcess(className, arguments);
 					break;
-				case SUSPEND:
+				case suspend:
 					break; // TODO
-				case MIGRATE:
+				case migrate:
 					String processName = args[1];
 					migrateProcess(processName);
 					break;
 				default:
-					System.out.print("Invalid command");
+					System.out.print("Invalid command. Please use 'help' command");
 				}
 			} catch (IOException e) {
 				System.out.print("IOException occurred: " + e.getMessage());
 			} catch (IllegalArgumentException e) {
-				System.out.print("IllegalArgumentException: " + e.getMessage());
+				System.out.print("Invalid command. Please use 'help' command");
 			}
 		}
+		if (!flag)
+			System.exit(0);
 	}
 
 	/**
@@ -76,30 +93,29 @@ public class ProcessManager implements ProcessCallback {
 	 */
 	private void startProcess(String className, String[] args) {
 		Class<?> c;
-		Constructor constructor;
+		Constructor<?> constructor;
 		try {
 			c = Class.forName(className);
 			constructor = c.getConstructor(String[].class);
 			Object inst = constructor.newInstance((Object) args);
-			// Adding the process object to the process list
+			//Adding the process object to the process list
 			String processId = getProcessId();
 			processList.put(processId, new ProcessObject(
 					(MigratableProcess) inst, processId, "running"));
-			// Start the process in a new thread
+			//Start the process in a new thread
 			RunProcess prc = new RunProcess((MigratableProcess) inst, this,
 					processId);
 			new Thread((Runnable) prc).start();
-			// new Thread((Runnable) inst).start();
 		} catch (InvocationTargetException e) {
-			System.out.println("InvocationTargetException: " + e.getMessage());
+			System.out.print("Invalid arguments. Please specified required arguments to the process");
 		} catch (NoSuchMethodException e) {
-			System.out.println("NoSuchMethodException: " + e.getMessage());
+			System.out.print("NoSuchMethodException: " + e.getMessage());
 		} catch (ClassNotFoundException e) {
-			System.out.println("ClassNotFoundException: " + e.getMessage());
+			System.out.print("Specified process not found. Please try again.");
 		} catch (InstantiationException e) {
-			System.out.println("InstatiationException: " + e.getMessage());
+			System.out.print("InstatiationException: " + e.getMessage());
 		} catch (IllegalAccessException e) {
-			System.out.println("IllegalAccessException: " + e.getMessage());
+			System.out.print("IllegalAccessException: " + e.getMessage());
 		}
 	}
 
@@ -120,9 +136,9 @@ public class ProcessManager implements ProcessCallback {
 	 * 
 	 * @param process
 	 */
-	private void suspend(MigratableProcess process) {
+	/*private void suspend(MigratableProcess process) {
 		return;
-	}
+	}*/
 
 	/**
 	 * Migrates the process to the specified node
