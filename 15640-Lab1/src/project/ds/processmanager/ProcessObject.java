@@ -1,8 +1,10 @@
 package project.ds.processmanager;
 
+import java.io.Serializable;
+
 import project.ds.migratableprocess.MigratableProcess;
 
-public class ProcessObject {
+public class ProcessObject implements Serializable{
 	MigratableProcess migratableObj;
 	String processId;
 	String state;
