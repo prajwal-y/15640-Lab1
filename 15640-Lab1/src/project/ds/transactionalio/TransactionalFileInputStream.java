@@ -1,6 +1,7 @@
 package project.ds.transactionalio;
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -21,7 +22,7 @@ public class TransactionalFileInputStream extends InputStream implements Seriali
 		this.filePath = filePath;
 	}
 	
-	public String readLine() throws IOException{
+	public String readLine() throws IOException, EOFException{
 		File file = new File(filePath);
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String line;

@@ -57,10 +57,10 @@ public class MigrateSlave extends Thread {
 			}
 		} catch (UnknownHostException e) {
 			System.out
-					.println("UnknownHostException occurred in Client with error "
+					.println("Communication error with master: "
 							+ e.getMessage());
 		} catch (IOException e) {
-			System.out.println("IOException occurred in Client with error "
+			System.out.println("Communication error with master: "
 					+ e.getMessage());
 		} catch (ClassNotFoundException e) {
 			System.out
@@ -78,7 +78,7 @@ public class MigrateSlave extends Thread {
 			if(client != null)
 				client.close();
 		} catch (IOException e) {
-			System.out.println("IOException occurred in Client with error "
+			System.out.println("Communication error with master: "
 					+ e.getMessage());
 		}
 	}

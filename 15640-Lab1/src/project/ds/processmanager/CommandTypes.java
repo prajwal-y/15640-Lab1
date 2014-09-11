@@ -1,5 +1,5 @@
 package project.ds.processmanager;
 
 public enum CommandTypes {
-	ps, quit, process, suspend, migrate, stop, help
+	ps, quit, launch, migrate, suspend, resume, help, list
 }

@@ -1,5 +1,9 @@
 /**
- * 
+ * ProcessManager.java
+ * @author Prajwal Yadapadithaya (Andrew ID: pyadapad) Rohit Upadhyaya
+ *         (AndrewID: rjupadhy)
+ *         
+ * This is the class that provides a user interface and manages process migration
  */
 package project.ds.processmanager;
 
@@ -8,16 +12,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.HashMap;
 
 import project.ds.migratableprocess.MigratableProcess;
 
-/**
- * @author Prajwal Yadapadithaya (Andrew ID: pyadapad) Rohit Upadhyaya
- *         (AndrewID: rjupadhy)
- */
 public class ProcessManager implements ProcessCallback {
 
 	public HashMap<String, ProcessObject> processList = new HashMap<String, ProcessObject>();
@@ -43,13 +42,16 @@ public class ProcessManager implements ProcessCallback {
 					System.out.println("---------------------------------");
 					System.out.println("These are the acceptable commands");
 					System.out
-							.println("=> process <processName> <arguments> : Starts a new process of the specified name, with the arguments specified. Process should be of the type MigratableProcess. Also please specify fully qualified name of the process class.");
+							.println("=> launch <processName> <arguments>: Launches a new process of the specified name, with the arguments specified in the master. Process should be of the type MigratableProcess. Also please specify fully qualified name of the process class.");
 					System.out
 							.println("=> ps : Lists the currently running processes. the format is <processId>:<processName>.");
+					System.out.println("=> list: Lists all the slaves currently connected to the master");
 					System.out
 							.println("=> migrate <processId> <slaveId1> [<slaveId2>]: Migrate the process to the slave node (Default from master).");
 					System.out
-							.println("=> suspend <processId> : Suspend the process.");
+							.println("=> suspend <processId> : Suspend a running process.");
+					System.out
+							.println("=> resume <processId> : Resume a suspended process.");
 					System.out.println("=> quit : Exit PROCESS_MIGRATOR v1.0");
 					break;
 				case quit:
@@ -64,7 +66,7 @@ public class ProcessManager implements ProcessCallback {
 						listProcesses(processList);
 					}
 					break;
-				case process:
+				case launch:
 					if (args.length <= 1) {
 						System.out
 								.print("Process name not specified. Please enter a valid process name.");
@@ -82,11 +84,31 @@ public class ProcessManager implements ProcessCallback {
 					startProcess(className, arguments);
 					break;
 				case suspend:
-					break; //TODO
-				case migrate:
-					if(args.length < 3) {
+					if (args.length != 2) {
 						System.out
-						.print("Invalid arguments. Please specified required arguments to migrate");
+								.print("Invalid arguments. Please use 'help' to get the usage of the command");
+						break;
+					}
+					String pid1 = args[1];
+					suspend(pid1);
+					break;
+				case resume:
+					if (args.length != 2) {
+						System.out
+								.print("Invalid arguments. Please use 'help' to get the usage of the command");
+						break;
+					}
+					String pid2 = args[1];
+					resume(pid2);
+					break;
+				case list:
+					System.out.println("Master: Currently connnected to "
+							+ master.clients.size() + " slaves");
+					break;
+				case migrate:
+					if (args.length < 3) {
+						System.out
+								.print("Invalid arguments. Please specified required arguments to migrate");
 						break;
 					}
 					String processName = args[1];
@@ -131,8 +153,11 @@ public class ProcessManager implements ProcessCallback {
 			// Adding the process object to the process list
 			String processId = getProcessId();
 			processList.put(processId, new ProcessObject(
-					(MigratableProcess) inst, processId, "running"));
-			// Start the process in a new thread
+					(MigratableProcess) inst, processId,
+					ProcessConstants.RUNNING));
+			// Start the process in a new thread.
+			// Process received on destination node start running by default,
+			// even if they were suspended from the host node
 			RunProcess prc = new RunProcess((MigratableProcess) inst, this,
 					processId);
 			new Thread((Runnable) prc).start();
@@ -156,9 +181,9 @@ public class ProcessManager implements ProcessCallback {
 		else {
 			for (String processId : list.keySet())
 				System.out.println(processId
-						+ ": "
+						+ " : "
 						+ list.get(processId).migratableObj.getClass()
-								.getName());
+								.getName() + " : " + list.get(processId).state);
 		}
 	}
 
@@ -167,9 +192,27 @@ public class ProcessManager implements ProcessCallback {
 	 * 
 	 * @param process
 	 */
-	/*
-	 * private void suspend(MigratableProcess process) { return; }
-	 */
+	private void suspend(String processId) {
+		ProcessObject pObj = processList.get(processId);
+		if (pObj == null)
+			System.out
+					.println("Specified process not found on master. Please try again");
+		pObj.migratableObj.suspend();
+	}
+
+	private void resume(String processId) {
+		ProcessObject pObj = processList.get(processId);
+		if (pObj == null)
+			System.out
+					.println("Specified process not found on master. Please try again");
+		else if (pObj.state != ProcessConstants.SUSPENDED)
+			System.out.println("Specified process is already running");
+		else {
+			pObj.state = ProcessConstants.RUNNING;
+			RunProcess prc = new RunProcess(pObj.migratableObj, this, pObj.processId);
+			new Thread((Runnable) prc).start();
+		}
+	}
 
 	/**
 	 * Migrates the process to the specified node
@@ -204,12 +247,17 @@ public class ProcessManager implements ProcessCallback {
 	 */
 	private String getProcessId() {
 		int id = processList.size() + 1;
-		return "PRC" + id;
+		return ProcessConstants.SLAVE + "-" + id;
 	}
 
 	@Override
-	public void processCallback(String processId) {
+	public void processEnd(String processId) {
 		processList.remove(processId);
+	}
+
+	@Override
+	public void processSuspend(String processId) {
+		processList.get(processId).state = ProcessConstants.SUSPENDED;
 	}
 
 	/**

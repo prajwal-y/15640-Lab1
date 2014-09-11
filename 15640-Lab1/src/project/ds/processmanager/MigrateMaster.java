@@ -29,11 +29,11 @@ public class MigrateMaster extends Thread {
 			server = new ServerSocket(ProcessConstants.serverport);
 			while (true) {
 				Socket client = server.accept();
-				clients.put("S" + slaveCounter++, client);
+				clients.put(ProcessConstants.SLAVE + "-" + slaveCounter++, client);
 			}
 		} catch (IOException e) {
 			System.out
-					.println("IOException occurred in Server.run() with error "
+					.println("Communication error with client: "
 							+ e.getMessage());
 		}
 	}
@@ -48,11 +48,12 @@ public class MigrateMaster extends Thread {
 			MigratableProcess migratableObj = pObj.migratableObj;
 			Socket client = clients.get(clientId1);
 			migratableObj.suspend();
+			pm.processList.remove(processId);
 			try {
 				outStream = new ObjectOutputStream(client.getOutputStream());
 				outStream.writeObject(migratableObj);
 			} catch (IOException e) {
-				System.out.println("IOException occurred in migrateProcess: "
+				System.out.println("Communication error with client: "
 						+ e.getMessage());
 			}
 		} else if (clientId1 == null) {
@@ -83,7 +84,7 @@ public class MigrateMaster extends Thread {
 					}
 				} catch (IOException e) {
 					System.out
-							.println("IOException occurred in migrateProcess: "
+							.println("Communication error with client: "
 									+ e.getMessage());
 				} catch (ClassNotFoundException e) {
 					System.out
@@ -129,12 +130,19 @@ public class MigrateMaster extends Thread {
 			}
 
 		} catch (IOException e) {
-			System.out.println("IOException occurred in requestClient: "
+			System.out.println("Communication error with client: "
 					+ e.getMessage());
 		} catch (ClassNotFoundException e) {
 			System.out
 					.println("ClassNotFoundException occurred in requestClient: "
 							+ e.getMessage());
+		}
+	}
+	
+	public void listClients() {
+		System.out.println("Slave nodes currently connected to the master: ");
+		for(String client : clients.keySet()) {
+			System.out.println(client);
 		}
 	}
 

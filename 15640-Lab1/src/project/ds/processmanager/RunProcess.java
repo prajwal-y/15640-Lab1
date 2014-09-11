@@ -17,7 +17,10 @@ public class RunProcess implements Runnable{
 	@Override
 	public void run() {
 		process.run();
-		callback.processCallback(threadId);
+		if(process.getFlag() == 1)
+			callback.processSuspend(threadId);
+		else
+			callback.processEnd(threadId);
 	}
 
 }

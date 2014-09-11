@@ -2,5 +2,7 @@ package project.ds.processmanager;
 
 public interface ProcessCallback {
 
-	public void processCallback(String threadId);
+	public void processSuspend(String threadId);
+	
+	public void processEnd(String threadId);
 }
