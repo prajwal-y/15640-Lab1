@@ -26,20 +26,15 @@ public class MigrateSlave extends Thread {
 		try {
 			client = new Socket(host, ProcessConstants.serverport);
 			while (true) {
-				//System.out.println("Waiting for connection");
 				inStream = new ObjectInputStream(client.getInputStream());
-				//System.out.println("Waiting for message...");
 				Object obj = inStream.readObject();
 				String name = obj.getClass().getName();
-				//System.out.println("Object received is: " + name);
 				if (name.contains("migratableprocess")) {
 					pm.receiveProcess((MigratableProcess) obj);
 				} else if (name.contains("String")) {
-					//System.out.println("Processing command");
 					if (obj.equals("ps")) {
 						outStream = new ObjectOutputStream(
 								client.getOutputStream());
-						//System.out.println("Retrieved ObjectOutputStream");
 						outStream.writeObject(pm.processList);
 					}
 					if (((String) obj).contains("PRC")) {
@@ -49,7 +44,9 @@ public class MigrateSlave extends Thread {
 						MigratableProcess migratableObj = null;
 						if(pObj != null) {
 							migratableObj = (MigratableProcess)pm.processList.get(obj).migratableObj;
-							migratableObj.suspend();
+							if(pObj.state != ProcessConstants.SUSPENDED)
+								migratableObj.suspend();
+							pm.processList.remove(pObj.processId);
 						}
 						outStream.writeObject(migratableObj);
 					}
@@ -78,8 +75,7 @@ public class MigrateSlave extends Thread {
 			if(client != null)
 				client.close();
 		} catch (IOException e) {
-			System.out.println("Communication error with master: "
-					+ e.getMessage());
+			//Ignore here
 		}
 	}
 }

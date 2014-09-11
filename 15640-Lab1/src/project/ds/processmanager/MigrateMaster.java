@@ -16,7 +16,7 @@ public class MigrateMaster extends Thread {
 	ObjectOutputStream outStream = null;
 	ObjectInputStream inStream = null;
 
-	int slaveCounter = 0;
+	int slaveCounter = 1;
 	HashMap<String, Socket> clients = new HashMap<String, Socket>();
 
 	public MigrateMaster(ProcessManager p) {
@@ -47,7 +47,8 @@ public class MigrateMaster extends Thread {
 			}
 			MigratableProcess migratableObj = pObj.migratableObj;
 			Socket client = clients.get(clientId1);
-			migratableObj.suspend();
+			if(pObj.state != ProcessConstants.SUSPENDED)
+				migratableObj.suspend();
 			pm.processList.remove(processId);
 			try {
 				outStream = new ObjectOutputStream(client.getOutputStream());
@@ -101,28 +102,20 @@ public class MigrateMaster extends Thread {
 
 	public void requestAllClients(String message) {
 		for (String clientId : clients.keySet()) {
-			requestClient(clientId, message);
+			if(requestClient(clientId, message) == -1)
+				clients.remove(clientId);
 		}
 	}
 
-	public void requestClient(String clientId, String message) {
+	public int requestClient(String clientId, String message) {
 		Socket client = clients.get(clientId);
-		/*
-		 * System.out.println("Retrieved socket for client: " + clientId +
-		 * " with IP: " + client.getInetAddress().toString());
-		 */
 		try {
 			ObjectOutputStream outStream = new ObjectOutputStream(
 					client.getOutputStream());
 			outStream.writeObject(message);
-			/*
-			 * System.out.println("Written message: " + message +
-			 * " to output stream");
-			 */
 
 			inStream = new ObjectInputStream(client.getInputStream());
 			Object reply = inStream.readObject();
-			// System.out.println("Received message: from client");
 			if (reply.getClass().getName().contains("HashMap")) {
 				System.out.println(clientId);
 				ProcessManager
@@ -131,19 +124,21 @@ public class MigrateMaster extends Thread {
 
 		} catch (IOException e) {
 			System.out.println("Communication error with client: "
-					+ e.getMessage());
+					+ clientId);
+			return -1;
+			
 		} catch (ClassNotFoundException e) {
 			System.out
 					.println("ClassNotFoundException occurred in requestClient: "
 							+ e.getMessage());
 		}
+		return 0;
 	}
 	
 	public void listClients() {
 		System.out.println("Slave nodes currently connected to the master: ");
-		for(String client : clients.keySet()) {
+		for(String client : clients.keySet())
 			System.out.println(client);
-		}
 	}
 
 	public void close() {
@@ -155,9 +150,10 @@ public class MigrateMaster extends Thread {
 			for (String clientId : clients.keySet()) {
 				clients.get(clientId).close();
 			}
+			if(server != null)
+				server.close();
 		} catch (IOException e) {
-			System.out.println("IOException occurred in requestClient: "
-					+ e.getMessage());
+			//Ignore here
 		}
 	}
 }

@@ -6,8 +6,9 @@ public class PrintFibonacci implements MigratableProcess {
 	private TransactionalFileOuptutStream outFile;
 	private volatile boolean suspending = false;
 	private int n;
-	private int count = 0;
+	private int count;
 	private int flag = 0;
+	private int prev1 = 0, prev2 = 0;
 
 	public PrintFibonacci(String[] args) {
 		n = Integer.parseInt(args[0]);
@@ -17,8 +18,8 @@ public class PrintFibonacci implements MigratableProcess {
 	@Override
 	public void run() {
 		try {
-			int prev1 = 0, prev2 = 0;
 			while (!suspending && (count < n)) {
+				flag = 0;
 				if(count == 0) {
 					outFile.printLn("1");
 					prev1 = 1;
