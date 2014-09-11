@@ -3,7 +3,8 @@
  * @author Prajwal Yadapadithaya (Andrew ID: pyadapad) Rohit Upadhyaya
  *         (AndrewID: rjupadhy)
  *         
- * This is the class that provides a user interface and manages process migration
+ * This is the class that provides a command line user interface 
+ * and manages process migration. 
  */
 package project.ds.processmanager;
 
@@ -45,7 +46,8 @@ public class ProcessManager implements ProcessCallback {
 							.println("=> launch <processName> <arguments>: Launches a new process of the specified name, with the arguments specified in the master. Process should be of the type MigratableProcess. Also please specify fully qualified name of the process class.");
 					System.out
 							.println("=> ps : Lists the currently running processes. the format is <processId>:<processName>.");
-					System.out.println("=> list: Lists all the slaves currently connected to the master (only on master)");
+					System.out
+							.println("=> list: Lists all the slaves currently connected to the master (only on master)");
 					System.out
 							.println("=> migrate <processId> <slaveId1> [<slaveId2>]: Migrate the process to the slave node (Default from master and can be used only from master).");
 					System.out
@@ -67,10 +69,6 @@ public class ProcessManager implements ProcessCallback {
 					}
 					break;
 				case launch:
-					if(master == null){
-						System.out.println("This command is not valid on slave"); 
-						break;
-					}
 					if (args.length <= 1) {
 						System.out
 								.print("Process name not specified. Please enter a valid process name.");
@@ -106,8 +104,9 @@ public class ProcessManager implements ProcessCallback {
 					resume(pid2);
 					break;
 				case list:
-					if(master == null){
-						System.out.println("This command is not valid on slave"); 
+					if (master == null) {
+						System.out
+								.println("This command is not valid on slave");
 						break;
 					}
 					System.out.println("Master: Currently connnected to "
@@ -115,6 +114,11 @@ public class ProcessManager implements ProcessCallback {
 					master.listClients();
 					break;
 				case migrate:
+					if (master == null) {
+						System.out
+								.println("This command is not valid on slave");
+						break;
+					}
 					if (args.length < 3) {
 						System.out
 								.print("Invalid arguments. Please specified required arguments to migrate");
@@ -126,8 +130,9 @@ public class ProcessManager implements ProcessCallback {
 					slaveId1 = args[2];
 					if (args.length == 4)
 						slaveId2 = args[3];
-					if(slaveId1.equals(slaveId2)) {
-						System.out.println("Destination machine has to be different from source machine");
+					if (slaveId1.equals(slaveId2)) {
+						System.out
+								.println("Destination machine has to be different from source machine");
 						break;
 					}
 					migrateProcess(processName, slaveId1, slaveId2);
@@ -188,6 +193,10 @@ public class ProcessManager implements ProcessCallback {
 		}
 	}
 
+	/**
+	 * Method to list the processes in a node
+	 * @param list
+	 */
 	public static void listProcesses(HashMap<String, ProcessObject> list) {
 		if (list.isEmpty())
 			System.out.println("No processes running currently");
@@ -201,7 +210,7 @@ public class ProcessManager implements ProcessCallback {
 	}
 
 	/**
-	 * Suspends the specified process
+	 * Suspends a specified process
 	 * 
 	 * @param process
 	 */
@@ -213,6 +222,10 @@ public class ProcessManager implements ProcessCallback {
 		pObj.migratableObj.suspend();
 	}
 
+	/**
+	 * Resumes a specified process
+	 * @param processId
+	 */
 	private void resume(String processId) {
 		ProcessObject pObj = processList.get(processId);
 		if (pObj == null)
@@ -222,15 +235,17 @@ public class ProcessManager implements ProcessCallback {
 			System.out.println("Specified process is already running");
 		else {
 			pObj.state = ProcessConstants.RUNNING;
-			RunProcess prc = new RunProcess(pObj.migratableObj, this, pObj.processId);
+			RunProcess prc = new RunProcess(pObj.migratableObj, this,
+					pObj.processId);
 			new Thread((Runnable) prc).start();
 		}
 	}
 
 	/**
 	 * Migrates the process to the specified node
-	 * 
-	 * @param process
+	 * @param processId
+	 * @param slaveId1
+	 * @param slaveId2
 	 */
 	private void migrateProcess(String processId, String slaveId1,
 			String slaveId2) {
@@ -246,15 +261,15 @@ public class ProcessManager implements ProcessCallback {
 	 */
 	public void receiveProcess(MigratableProcess inst) {
 		String processId = getProcessId();
-		processList.put(processId,
-				new ProcessObject(inst, processId, ProcessConstants.RUNNING));
+		processList.put(processId, new ProcessObject(inst, processId,
+				ProcessConstants.RUNNING));
 		RunProcess prc = new RunProcess(inst, this, processId);
 		new Thread((Runnable) prc).start();
 	}
 
 	/**
 	 * Gets a unique identifier to each process. Identifier is of the format
-	 * "Process:<ID>"
+	 * "PRC-<ID>"
 	 * 
 	 * @return
 	 */
@@ -271,7 +286,7 @@ public class ProcessManager implements ProcessCallback {
 	@Override
 	public void processSuspend(String processId) {
 		ProcessObject pObj = processList.get(processId);
-		if(pObj != null)
+		if (pObj != null)
 			pObj.state = ProcessConstants.SUSPENDED;
 	}
 
@@ -300,5 +315,4 @@ public class ProcessManager implements ProcessCallback {
 		}
 		pm.processInput();
 	}
-
 }

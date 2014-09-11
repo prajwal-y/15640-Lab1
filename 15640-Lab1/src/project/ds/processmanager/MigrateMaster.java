@@ -1,3 +1,6 @@
+/**
+ * Class to handle migration on the master.
+ */
 package project.ds.processmanager;
 
 import java.io.IOException;
@@ -29,25 +32,35 @@ public class MigrateMaster extends Thread {
 			server = new ServerSocket(ProcessConstants.serverport);
 			while (true) {
 				Socket client = server.accept();
-				clients.put(ProcessConstants.SLAVE + "-" + slaveCounter++, client);
+				clients.put(ProcessConstants.SLAVE + "-" + slaveCounter++,
+						client);
 			}
 		} catch (IOException e) {
-			System.out
-					.println("Communication error with client: "
-							+ e.getMessage());
+			System.out.println("Communication error with client: "
+					+ e.getMessage());
 		}
 	}
 
+	/**
+	 * Migrates the process to the specified slave. If only one slave is
+	 * specified, the process is migrated from master to slave. If two slaves
+	 * are specified, process is transferred from first slave to the second
+	 * slave
+	 * @param processId
+	 * @param clientId1
+	 * @param clientId2
+	 */
 	public void migrateProcess(String processId, String clientId1,
 			String clientId2) {
 		if (clients.containsKey(clientId1) && clientId2 == null) {
 			ProcessObject pObj = pm.processList.get(processId);
-			if(pObj == null) {
-				System.out.println("Specified process not found on master. Please try again");
+			if (pObj == null) {
+				System.out
+						.println("Specified process not found on master. Please try again");
 			}
 			MigratableProcess migratableObj = pObj.migratableObj;
 			Socket client = clients.get(clientId1);
-			if(pObj.state != ProcessConstants.SUSPENDED)
+			if (pObj.state != ProcessConstants.SUSPENDED)
 				migratableObj.suspend();
 			pm.processList.remove(processId);
 			try {
@@ -79,14 +92,13 @@ public class MigrateMaster extends Thread {
 						outStream = new ObjectOutputStream(
 								client2.getOutputStream());
 						outStream.writeObject(obj);
-					}
-					else {
-						System.out.println("Specified process not found in slave");
+					} else {
+						System.out
+								.println("Specified process not found in slave");
 					}
 				} catch (IOException e) {
-					System.out
-							.println("Communication error with client: "
-									+ e.getMessage());
+					System.out.println("Communication error with client: "
+							+ e.getMessage());
 				} catch (ClassNotFoundException e) {
 					System.out
 							.println("ClassNotFoundException occurred in migrateProcess: "
@@ -100,13 +112,26 @@ public class MigrateMaster extends Thread {
 		}
 	}
 
+	/**
+	 * Method does a poll on all the clients
+	 * @param message
+	 */
 	public void requestAllClients(String message) {
 		for (String clientId : clients.keySet()) {
-			if(requestClient(clientId, message) == -1)
+			if (requestClient(clientId, message) == -1) {
+				//Removes the client if it's not reachable
 				clients.remove(clientId);
+			}
 		}
 	}
 
+	/**
+	 * Method to poll a client and send/receive objects
+	 * @param clientId
+	 * @param message
+	 * @return 0 if the client is reachable
+	 * -1 if the client is not reachable
+	 */
 	public int requestClient(String clientId, String message) {
 		Socket client = clients.get(clientId);
 		try {
@@ -123,10 +148,9 @@ public class MigrateMaster extends Thread {
 			}
 
 		} catch (IOException e) {
-			System.out.println("Communication error with client: "
-					+ clientId);
+			System.out.println("Communication error with client: " + clientId);
 			return -1;
-			
+
 		} catch (ClassNotFoundException e) {
 			System.out
 					.println("ClassNotFoundException occurred in requestClient: "
@@ -134,10 +158,13 @@ public class MigrateMaster extends Thread {
 		}
 		return 0;
 	}
-	
+
+	/**
+	 * Lists all the clients currently connected to the master
+	 */
 	public void listClients() {
 		System.out.println("Slave nodes currently connected to the master: ");
-		for(String client : clients.keySet())
+		for (String client : clients.keySet())
 			System.out.println(client);
 	}
 
@@ -150,10 +177,10 @@ public class MigrateMaster extends Thread {
 			for (String clientId : clients.keySet()) {
 				clients.get(clientId).close();
 			}
-			if(server != null)
+			if (server != null)
 				server.close();
 		} catch (IOException e) {
-			//Ignore here
+			// Ignore here
 		}
 	}
 }

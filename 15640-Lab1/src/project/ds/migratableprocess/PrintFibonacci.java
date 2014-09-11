@@ -1,3 +1,9 @@
+/**
+ * Example for a migratable process.
+ * This process prints the fibonacci numbers to a file.
+ * arguments: arg[0] - count of the numbers to be printed
+ * arg[1] - Output file
+ */
 package project.ds.migratableprocess;
 
 import project.ds.transactionalio.TransactionalFileOuptutStream;

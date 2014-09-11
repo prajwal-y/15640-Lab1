@@ -1,3 +1,6 @@
+/**
+ * Class that runs a specified process, and performs callback operations
+ */
 package project.ds.processmanager;
 
 import project.ds.migratableprocess.MigratableProcess;
@@ -18,9 +21,9 @@ public class RunProcess implements Runnable{
 	public void run() {
 		process.run();
 		if(process.getFlag() == 1)
-			callback.processSuspend(threadId);
+			callback.processSuspend(threadId); //Suspended case
 		else
-			callback.processEnd(threadId);
+			callback.processEnd(threadId); //Process end case
 	}
 
 }

@@ -1,3 +1,8 @@
+/**
+ * Reads a file line by line, and prints the count for each word present in the file. 
+ * Input should have multiple lines with multiple words in each line. 
+ * Processing each line is done atomically. 
+ */
 package project.ds.migratableprocess;
 
 import java.io.EOFException;
@@ -52,8 +57,8 @@ public class WordCount implements MigratableProcess {
 		} catch (InterruptedException e) {
 			// ignore it
 		}
-		
-		if(suspending)
+
+		if (suspending)
 			flag = 1;
 		suspending = false;
 	}
@@ -61,9 +66,10 @@ public class WordCount implements MigratableProcess {
 	@Override
 	public void suspend() {
 		suspending = true;
-		while (suspending);
+		while (suspending)
+			;
 	}
-	
+
 	@Override
 	public int getFlag() {
 		return flag;

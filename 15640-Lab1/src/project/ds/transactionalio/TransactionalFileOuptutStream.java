@@ -16,7 +16,7 @@ public class TransactionalFileOuptutStream extends OutputStream implements
 		this.filePath = filePath;
 	}
 
-	// http://www.journaldev.com/881/how-to-append-to-a-file-in-java
+	//Referred: http://www.journaldev.com/881/how-to-append-to-a-file-in-java
 	public void printLn(String line) {
 		try {
 			// below true flag tells OutputStream to append

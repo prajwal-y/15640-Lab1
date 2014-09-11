@@ -1,3 +1,6 @@
+/**
+ * Class to handle migration on client
+ */
 package project.ds.processmanager;
 
 import java.io.IOException;

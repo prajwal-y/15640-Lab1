@@ -34,21 +34,6 @@ public class TransactionalFileInputStream extends InputStream implements Seriali
         reader.close();
         return line;
 	}
-	
-	public byte[] readBytes(int bytes) throws IOException{
-		byte[] result = new byte[bytes];
-		/*Path file = Paths.get(filePath);
-		try {
-			in = Files.newInputStream(file);
-		} catch (IOException e) {
-			System.out.println("IOException in TransactionalFileInputStream: "+ e.getMessage());
-		}*/
-		
-		//Seek to numBytes beyond beginning
-		in.read(result, 0, bytes);
-		return null;
-		
-	}
 
 	@Override
 	public int read() throws IOException {

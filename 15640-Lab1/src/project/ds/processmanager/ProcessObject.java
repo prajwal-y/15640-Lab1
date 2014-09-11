@@ -1,3 +1,6 @@
+/**
+ * Class to represent a process
+ */
 package project.ds.processmanager;
 
 import java.io.Serializable;

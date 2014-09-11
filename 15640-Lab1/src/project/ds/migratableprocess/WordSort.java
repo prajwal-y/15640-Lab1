@@ -1,3 +1,8 @@
+/**
+ * Reads a file line by line, and prints the lines to a file
+ * after sorting the words in the line. Input should have multiple lines
+ * with multiple words in each line. Processing each line is done atomically. 
+ */
 package project.ds.migratableprocess;
 
 import java.io.EOFException;
