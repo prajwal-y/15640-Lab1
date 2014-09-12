@@ -15,12 +15,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import project.ds.migratableprocess.MigratableProcess;
 
 public class ProcessManager implements ProcessCallback {
 
-	public HashMap<String, ProcessObject> processList = new HashMap<String, ProcessObject>();
+	public ConcurrentHashMap<String, ProcessObject> processList = new ConcurrentHashMap<String, ProcessObject>();
 	private static MigrateMaster master = null;
 	private static MigrateSlave slave = null;
 
@@ -61,6 +62,7 @@ public class ProcessManager implements ProcessCallback {
 					break;
 				case ps:
 					if (master != null) {
+						master.requestAllClients("poll");
 						System.out.println("Master:");
 						listProcesses(processList);
 						master.requestAllClients("ps");
@@ -109,6 +111,7 @@ public class ProcessManager implements ProcessCallback {
 								.println("This command is not valid on slave");
 						break;
 					}
+					master.requestAllClients("poll");
 					System.out.println("Master: Currently connnected to "
 							+ master.clients.size() + " slaves");
 					master.listClients();
@@ -197,7 +200,7 @@ public class ProcessManager implements ProcessCallback {
 	 * Method to list the processes in a node
 	 * @param list
 	 */
-	public static void listProcesses(HashMap<String, ProcessObject> list) {
+	public static void listProcesses(ConcurrentHashMap<String, ProcessObject> list) {
 		if (list.isEmpty())
 			System.out.println("No processes running currently");
 		else {
@@ -273,7 +276,7 @@ public class ProcessManager implements ProcessCallback {
 	 * 
 	 * @return
 	 */
-	private String getProcessId() {
+	public String getProcessId() {
 		int id = processList.size() + 1;
 		return ProcessConstants.PROCESS + "-" + id;
 	}

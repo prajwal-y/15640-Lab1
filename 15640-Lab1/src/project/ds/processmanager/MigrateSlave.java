@@ -53,6 +53,12 @@ public class MigrateSlave extends Thread {
 						}
 						outStream.writeObject(migratableObj);
 					}
+					if(obj.equals("poll")){
+						outStream = new ObjectOutputStream(
+								client.getOutputStream());
+						outStream.writeObject("alive");
+					}
+						
 				}
 			}
 		} catch (UnknownHostException e) {
@@ -62,6 +68,7 @@ public class MigrateSlave extends Thread {
 		} catch (IOException e) {
 			System.out.println("Communication error with master: "
 					+ e.getMessage());
+			System.exit(0);
 		} catch (ClassNotFoundException e) {
 			System.out
 					.println("ClassNotFoundException occurred in Client with error "
